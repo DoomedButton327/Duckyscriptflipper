@@ -507,6 +507,17 @@
       <input type="number" id="init-delay-input" value="500" min="0" max="99999" />
     </div>
 
+    <div class="control-group">
+      <label>String Delay (ms)<span id="stringdelay-display" style="color:var(--accent2)">0</span></label>
+      <input type="range" id="stringdelay-slider" min="0" max="500" value="0" step="5"
+        style="accent-color: var(--accent2);" />
+    </div>
+
+    <div class="control-group">
+      <label>Custom StringDelay (ms)</label>
+      <input type="number" id="stringdelay-input" value="0" min="0" max="99999" />
+    </div>
+
     <div class="control-group" style="gap:12px;">
       <div class="toggle-wrap">
         <label class="toggle">
@@ -521,6 +532,13 @@
           <span class="slider-toggle"></span>
         </label>
         <span class="toggle-label">Add DELAY between lines</span>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-stringdelay" />
+          <span class="slider-toggle"></span>
+        </label>
+        <span class="toggle-label">Add STRINGDELAY</span>
       </div>
       <div class="toggle-wrap">
         <label class="toggle">
@@ -614,17 +632,21 @@
 </footer>
 
 <script>
-  const inputArea    = document.getElementById('input-area');
-  const outputArea   = document.getElementById('output-area');
-  const delaySlider  = document.getElementById('delay-slider');
-  const delayInput   = document.getElementById('delay-input');
-  const initDelay    = document.getElementById('init-delay-input');
-  const delayDisplay = document.getElementById('delay-display');
-  const toggleEnter  = document.getElementById('toggle-enter');
-  const toggleDelay  = document.getElementById('toggle-delay');
-  const toggleEmpty  = document.getElementById('toggle-empty');
-  const lineNumsIn   = document.getElementById('line-nums-in');
-  const lineNumsOut  = document.getElementById('line-nums-out');
+  const inputArea          = document.getElementById('input-area');
+  const outputArea         = document.getElementById('output-area');
+  const delaySlider        = document.getElementById('delay-slider');
+  const delayInput         = document.getElementById('delay-input');
+  const initDelay          = document.getElementById('init-delay-input');
+  const delayDisplay       = document.getElementById('delay-display');
+  const stringDelaySlider  = document.getElementById('stringdelay-slider');
+  const stringDelayInput   = document.getElementById('stringdelay-input');
+  const stringDelayDisplay = document.getElementById('stringdelay-display');
+  const toggleEnter        = document.getElementById('toggle-enter');
+  const toggleDelay        = document.getElementById('toggle-delay');
+  const toggleStringDelay  = document.getElementById('toggle-stringdelay');
+  const toggleEmpty        = document.getElementById('toggle-empty');
+  const lineNumsIn         = document.getElementById('line-nums-in');
+  const lineNumsOut        = document.getElementById('line-nums-out');
 
   // ── Sync delay slider ↔ input ──
   delaySlider.addEventListener('input', () => {
@@ -641,6 +663,24 @@
     convert();
   });
 
+  // ── Sync STRINGDELAY slider ↔ input ──
+  stringDelaySlider.addEventListener('input', () => {
+    const v = stringDelaySlider.value;
+    stringDelayInput.value = v;
+    stringDelayDisplay.textContent = v;
+    if (parseInt(v) > 0) toggleStringDelay.checked = true;
+    convert();
+  });
+
+  stringDelayInput.addEventListener('input', () => {
+    const v = Math.max(0, parseInt(stringDelayInput.value) || 0);
+    stringDelaySlider.value = Math.min(v, 500);
+    stringDelayDisplay.textContent = v;
+    if (v > 0) toggleStringDelay.checked = true;
+    convert();
+  });
+
+  toggleStringDelay.addEventListener('change', convert);
   initDelay.addEventListener('input', convert);
   toggleEnter.addEventListener('change', convert);
   toggleDelay.addEventListener('change', convert);
@@ -659,13 +699,15 @@
 
   // ── Core Converter ──
   function convert() {
-    const raw      = inputArea.value;
-    const lines    = raw.split('\n');
-    const delay    = parseInt(delayInput.value) || 0;
-    const init     = parseInt(initDelay.value) || 0;
-    const addEnter = toggleEnter.checked;
-    const addDelay = toggleDelay.checked;
-    const skipEmp  = toggleEmpty.checked;
+    const raw           = inputArea.value;
+    const lines         = raw.split('\n');
+    const delay         = parseInt(delayInput.value) || 0;
+    const init          = parseInt(initDelay.value) || 0;
+    const strDelay      = parseInt(stringDelayInput.value) || 0;
+    const addEnter      = toggleEnter.checked;
+    const addDelay      = toggleDelay.checked;
+    const addStrDelay   = toggleStringDelay.checked;
+    const skipEmp       = toggleEmpty.checked;
 
     let out = [];
 
@@ -691,7 +733,6 @@
 
       if (line.trim() === '') {
         if (skipEmp) continue;
-        // empty line → just ENTER
         out.push('ENTER');
         cmdCount++;
         if (addDelay && delay > 0 && i < lines.length - 1) {
@@ -699,9 +740,14 @@
           totalMs += delay;
         }
       } else {
+        if (addStrDelay && strDelay > 0) {
+          out.push(`STRINGDELAY ${strDelay}`);
+          cmdCount++;
+        }
         out.push(`STRING ${line}`);
         charCount += line.length;
         cmdCount++;
+        if (addStrDelay && strDelay > 0) totalMs += line.length * strDelay;
         if (addEnter) {
           out.push('ENTER');
           cmdCount++;
