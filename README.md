@@ -75,9 +75,10 @@ No server required. No npm install. No build step.
 Each **non-empty line** of your input becomes:
 
 ```
+STRINGDELAY 30     ← (optional, inserted before every STRING command)
 STRING your line of text here
-ENTER          ← (optional, toggled on by default)
-DELAY 100      ← (optional, based on your delay setting)
+ENTER              ← (optional, toggled on by default)
+DELAY 100          ← (optional, based on your delay setting)
 ```
 
 Each **empty line** becomes:
@@ -96,8 +97,10 @@ This maps directly to [Rubber Ducky Scripting Language 1.0](https://docs.hak5.or
 |---|---|
 | **Line Delay** | Milliseconds of `DELAY` inserted after each line (slider or number input) |
 | **Initial Delay** | `DELAY` added at the very top of the script before typing starts |
+| **String Delay** | Sets `STRINGDELAY <ms>` before every `STRING` command — controls the pause between each individual character typed |
 | **ENTER after each line** | Toggle whether each `STRING` command is followed by `ENTER` |
 | **Add DELAY between lines** | Toggle whether delay commands are inserted between lines |
+| **Add STRINGDELAY** | Toggle whether the `STRINGDELAY` command is emitted |
 | **Skip empty lines** | When enabled, blank lines in input are ignored entirely |
 | **Export .txt** | Downloads the script as `payload.txt` |
 | **Copy Script** | Copies the full output to your clipboard |
@@ -110,6 +113,7 @@ This maps directly to [Rubber Ducky Scripting Language 1.0](https://docs.hak5.or
 | Command | Description |
 |---|---|
 | `STRING <text>` | Types the given string as keyboard input |
+| `STRINGDELAY <ms>` | Sets the delay between each character typed (applies to all following `STRING` commands) |
 | `ENTER` | Presses the Enter key |
 | `DELAY <ms>` | Waits for the specified number of milliseconds |
 | `REM <text>` | Comment — ignored during execution |
